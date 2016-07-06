@@ -37,6 +37,15 @@ class WP_Import_Demo_Content {
      */
     public $option_file;
 
+
+    /**
+     * Term key file
+     * Data type: JSON string
+     *
+     * @var string file path
+     */
+    public $term_meta;
+
     /**
      * Option key to store data in $option_file
      *
@@ -59,13 +68,15 @@ class WP_Import_Demo_Content {
             'widget' => '',
             'option' => '',
             'option_key' => '',
+            'term_meta' => '',
         ));
 
-        $this->xml_file =  $options['xml'];
+        $this->xml_file     =  $options['xml'];
         $this->customize_file =  $options['customize'];
-        $this->widget_file =  $options['widget'];
-        $this->option_file =  $options['option'];
-        $this->option_key =  $options['option_key'];
+        $this->widget_file  =  $options['widget'];
+        $this->option_file  =  $options['option'];
+        $this->option_key   =  $options['option_key'];
+        $this->term_meta    =  $options['term_meta'];
 
     }
 
@@ -380,10 +391,46 @@ class WP_Import_Demo_Content {
                 $wp_import->import( $file );
                 $this->processed_posts = $wp_import->processed_posts;
                 $this->processed_terms = $wp_import->processed_terms;
+                $this->import_term_meta();
                 do_action( 'ft_import_after_xml_imported', $this );
             }
         }
     }
+
+    function import_term_meta(){
+        if ( is_file( $this->term_meta ) ) {
+
+            $raw = file_get_contents( $this->term_meta );
+            $data = @json_decode( $raw , true );
+
+            if ( is_array( $data ) ){
+
+                $home_url = home_url('');
+                foreach ( $data as $term ) {
+                    $term = ( array ) $term;
+                    if ( isset( $term['term_id'] ) && isset( $this->processed_terms[ $term['term_id'] ] ) ) {
+                        $term_id = $this->processed_terms[ $term['term_id'] ];
+
+                        if ( in_array( $term['meta_key'] ,array( '_wpc_cat_image_id', '_wpc_store_image_id' ) ) ) {
+                            if ( isset( $this->processed_posts[ $term['meta_value'] ] ) ) {
+                                $term['meta_value'] = $this->processed_posts[ $term['meta_value'] ];
+                            } else {
+                                $term['meta_value'] = 0;
+                            }
+
+                        } elseif( in_array( $term['meta_key'] , array( '_wpc_store_image', '_wpc_cat_image' ) ) ) {
+                            $term['meta_value'] = str_replace( 'http://demos.famethemes.com/wpcoupon', $home_url, $term['meta_value'] );
+                        }
+                        update_term_meta( $term_id, $term['meta_key'], $term['meta_value'] );
+                    }
+                }
+            }
+
+        }
+
+    }
+
+
 
     /**
      * Available widgets

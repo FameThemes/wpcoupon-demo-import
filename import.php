@@ -3,7 +3,7 @@
 Plugin Name: Wp Coupon Demo Import
 Plugin URI: https://github.com/shrimp2t/wpcoupon-demo-import
 Description: Import your content, widgets and theme settings with one click. Theme authors! Enable simple demo import for your theme demo data.
-Version: 1.0.0
+Version: 1.0.1
 Author: Shrimp2t
 Author URI: https://github.com/shrimp2t/
 License: GPL3
@@ -45,7 +45,7 @@ class WPCoupon_Demo_Import {
         add_submenu_page(
             'wpcoupon_options',
             esc_html__( 'Wp Coupon demo content', 'wp-coupon' ),
-            esc_html__( 'Demo content', 'wp-coupon' ),
+            esc_html__( 'Demo Content', 'wp-coupon' ),
             'manage_options',
             'wpcoupon-demo-content',
             array( __CLASS__, 'display' )
@@ -66,6 +66,7 @@ class WPCoupon_Demo_Import {
             'customize'  => dirname( __FILE__ ).'/dummy-data/customize.json',
             'widget'     => dirname( __FILE__ ).'/dummy-data/widgets.json',
             'option'     => dirname( __FILE__ ).'/dummy-data/options.json',
+            'term_meta'  => dirname( __FILE__ ).'/dummy-data/term-meta.json',
             'option_key' => 'st_options',
         ) );
         $import->import();
@@ -233,10 +234,11 @@ class WPCoupon_Demo_Import {
                             _time:  new Date().getTime()
                         };
 
-                        $.post( window.ajaxurl, params, function ($data) {
+                        $.post( window.ajaxurl, params, function ( data) {
                             btn.removeClass('disabled');
                             $('.spinner', btn.parent() ).css('visibility', 'hidden');
                             window.location = '<?php echo admin_url( 'admin.php?page=wpcoupon-demo-content&imported=1' ); ?>';
+                            //$( '.ajax_console').val( data );
                         });
                     }
 
