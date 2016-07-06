@@ -87,8 +87,19 @@ class WP_Import_Demo_Content {
         $this->import_xml( $this->xml_file );
         $this->import_customize( $this->customize_file );
         $this->import_widgets( $this->widget_file );
-        $this->import_options( $this->option_key, $this->widget_file );
+        $this->import_options( $this->option_key, $this->option_file );
         do_action( 'ft_import_after_imported', $this->processed_posts );
+    }
+
+    function replace_deep( $search, $replace, $array ) {
+        if ( ! is_array( $array ) ) {
+            return str_replace( $search, $replace, $array );
+        } else {
+            foreach ( ( array ) $array as $k => $v ) {
+                $array[ $k ] = $this->replace_deep( $search, $replace, $v );
+            }
+        }
+        return $array;
     }
 
     /**
@@ -108,8 +119,21 @@ class WP_Import_Demo_Content {
         if ( ! $option_key ) {
             return  false;
         }
-        $data = file_get_contents( $file );
-        $data = json_decode( $data , true );
+        $data = @file_get_contents( $file );
+        $data = @json_decode( $data , true );
+        $home_url = home_url('');
+        // replace option
+        $data['site_logo'] = $this->replace_deep( 'http://demos.famethemes.com/wpcoupon', $home_url, $data['site_logo'] );
+
+        if ( $this->processed_terms ) {
+            foreach (( array ) $data['top_search_stores'] as $k => $t) {
+                if ( isset( $this->processed_terms[ $t ] ) ) {
+                    $data['top_search_stores'][ $k ] = $this->processed_terms[ $t ];
+                } else {
+                    unset( $data['top_search_stores'][ $k ] );
+                }
+            }
+        }
 
         update_option( $option_key, $data );
     }

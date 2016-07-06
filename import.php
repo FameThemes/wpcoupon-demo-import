@@ -11,6 +11,7 @@ License URI: http://www.gnu.org/licenses/gpl.html
 Text Domain: coupon-import
 */
 
+
 class WPCoupon_Demo_Import {
     public $dir;
     public $url;
